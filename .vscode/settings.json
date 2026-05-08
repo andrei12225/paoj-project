@@ -1,6 +1,8 @@
 {
     "java.project.sourcePaths": [
-        "src/main"
+        "src/main",
+        "src/main/resources"
     ],
-    "java.project.referencedLibraries": []
+    "java.project.referencedLibraries": [],
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

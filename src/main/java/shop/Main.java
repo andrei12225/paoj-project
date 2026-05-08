@@ -1,5 +1,6 @@
 package shop;
 
+import shop.config.DatabaseInitializer;
 import shop.data.StoreInventory;
 import shop.enums.AccessoryCategory;
 import shop.enums.AmpTechnology;
@@ -14,6 +15,8 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
+        DatabaseInitializer.initializeDatabase();
+
         StoreInventory inventory = StoreInventory.getInstance();
 
         seedInitialData(inventory);
