@@ -1,0 +1,4 @@
+.vscode/
+.github/
+target/
+src/main/resources/application.properties

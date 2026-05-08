@@ -1,0 +1,11 @@
+services:
+  mysql:
+    image: mysql:latest
+    container_name: music_store-mysql
+    environment:
+      MYSQL_DATABASE: music_store
+      MYSQL_USER: student
+      MYSQL_PASSWORD: student
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
