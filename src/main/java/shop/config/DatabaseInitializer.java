@@ -12,10 +12,18 @@ public final class DatabaseInitializer {
         try (Connection connection = DatabaseConnection.getConnection()) {
             var path = Paths.get("src/main/resources/schema.sql").toAbsolutePath().toString();
             var sql = new String(Files.readAllBytes(Paths.get(path)));
-            var statement = connection.createStatement();
-            statement.execute(sql);
+            String[] individualQueries = sql.split(";");
 
-            System.out.println("Database initialized successfully");
+            try (var stmt = connection.createStatement()) {
+                for (String query : individualQueries) {
+                    if (!query.trim().isEmpty()) {
+                        stmt.execute(query.trim());
+                    }
+                }
+
+                System.out.println("Database tables initialized successfully!");
+            }
+            
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize database", e);
         }
