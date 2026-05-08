@@ -1,0 +1,81 @@
+package shop.models;
+
+import shop.enums.UserPermission;
+import shop.enums.UserRole;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+public class User {
+    private String userID;
+    private String username;
+    private String password;
+    private UserRole role;
+    private Map<UserPermission, Boolean> permissions = new HashMap<>();
+    private LocalDateTime lastLogin;
+
+    public User(String userID, String username, String password, UserRole role) {
+        this.userID = userID;
+        this.username = username;
+        this.password = password;
+        this.role = role;
+
+        if (role == UserRole.ADMIN) {
+            for (UserPermission permission : UserPermission.values()) {
+                permissions.put(permission, true);
+            }
+        }
+    }
+
+    public void updateLastLogin() {
+        this.lastLogin = LocalDateTime.now();
+    }
+
+    public boolean hasPermission(UserPermission permission) {
+        return permissions.getOrDefault(permission, false);
+    }
+
+    public void addPermission(UserPermission permission) {
+        permissions.put(permission, true);
+    }
+
+    public void removePermission(UserPermission permission) {
+        permissions.put(permission, false);
+    }
+
+    @Override
+    public String toString() {
+        return "User {" +
+            " userID='" + userID + "'" +
+            ", username='" + username + "'" +
+            ", password='" + password + "'" +
+            ", role='" + role + "'" +
+            ", lastLogin='" + lastLogin + "'" +
+            ", permissions='" + permissions.keySet().stream().filter(k -> permissions.get(k)).toList() + "'" +
+            " }";
+    }
+
+    public String getUserID() {
+        return this.userID;
+    }
+
+    public String getUsername() {
+        return this.username;
+    }
+
+    public String getPassword() {
+        return this.password;
+    }
+
+    public UserRole getRole() {
+        return this.role;
+    }
+
+    public LocalDateTime getLastLogin() {
+        return this.lastLogin;
+    }
+
+    public Map<UserPermission, Boolean> getPermissions() {
+        return permissions;
+    }
+}
