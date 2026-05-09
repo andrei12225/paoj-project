@@ -1,10 +1,14 @@
 package shop.models;
 
-import shop.enums.UserPermission;
-import shop.enums.UserRole;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.mindrot.jbcrypt.BCrypt;
+
+import shop.enums.UserPermission;
+import shop.enums.UserRole;
+
 
 public class User {
     private int userID;
@@ -25,6 +29,10 @@ public class User {
                 permissions.put(permission, true);
             }
         }
+    }
+
+    public boolean checkPassword(String password) {
+        return BCrypt.checkpw(password, this.password);
     }
 
     public void updateLastLogin() {

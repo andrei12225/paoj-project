@@ -1,5 +1,6 @@
 package shop.data; 
 
+import org.mindrot.jbcrypt.BCrypt;
 import shop.enums.UserPermission;
 import shop.enums.UserRole;
 import shop.interfaces.Tunable;
@@ -46,7 +47,7 @@ private static StoreInventory instance;
         refreshData();
 
         if (registeredUsers.isEmpty()) {
-            User admin = new User(0, "admin", "1234", UserRole.ADMIN);
+            User admin = new User(0, "admin", BCrypt.hashpw("1234", BCrypt.gensalt()), UserRole.ADMIN);
             userRepository.create(admin);
             for (UserPermission permission : UserPermission.values()) {
                 userPermissionsRepository.create(admin, permission);
@@ -97,7 +98,7 @@ private static StoreInventory instance;
         if (getUserByUsername(username, 0) != null) {
             throw new IllegalArgumentException("Username already exists.");
         }
-        User newUser = new User(0, username, password, UserRole.EMPLOYEE);
+        User newUser = new User(0, username, BCrypt.hashpw(password, BCrypt.gensalt()), UserRole.EMPLOYEE);
         userRepository.create(newUser);
         registeredUsers.add(newUser);
     }
@@ -107,7 +108,7 @@ private static StoreInventory instance;
         if (user == null) {
             throw new IllegalArgumentException("Invalid username or password.");
         }
-        if (!user.getPassword().equals(password)) {
+        if (!user.checkPassword(password)) {
             throw new IllegalArgumentException("Invalid username or password.");
         }
 
