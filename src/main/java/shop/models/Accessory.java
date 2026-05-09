@@ -7,7 +7,7 @@ public class Accessory extends Product {
     private String targetInstrument;
     private int packQuantity;
 
-    public Accessory(String id, String name, double price, int stockQuantity, AccessoryCategory category, String targetInstrument, int packQuantity) {
+    public Accessory(int id, String name, double price, int stockQuantity, AccessoryCategory category, String targetInstrument, int packQuantity) {
         super(id, name, price, stockQuantity);
         this.category = category;
         this.targetInstrument = targetInstrument;
@@ -17,7 +17,7 @@ public class Accessory extends Product {
     @Override
     public String toString() {
         return "Accessory {" +
-            " id='" + getId() + "'" +
+            " id='" + getDisplayId() + "'" +
             ", name='" + getName() + "'" +
             ", price='" + getPrice() + "'" +
             ", stockQuantity='" + getStockQuantity() + "'" +

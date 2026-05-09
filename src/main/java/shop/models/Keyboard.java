@@ -7,7 +7,7 @@ public class Keyboard extends Product {
     private boolean isDigital;
     private KeyAction keyAction;
 
-    public Keyboard(String id, String name, double price, int stockQuantity, int keyCount, boolean isDigital, KeyAction keyAction) {
+    public Keyboard(int id, String name, double price, int stockQuantity, int keyCount, boolean isDigital, KeyAction keyAction) {
         super(id, name, price, stockQuantity);
         this.keyCount = keyCount;
         this.isDigital = isDigital;
@@ -17,7 +17,7 @@ public class Keyboard extends Product {
     @Override
     public String toString() {
         return "Keyboard {" +
-            " id='" + getId() + "'" +
+            " id='" + getDisplayId() + "'" +
             ", name='" + getName() + "'" +
             ", price='" + getPrice() + "'" +
             ", stockQuantity='" + getStockQuantity() + "'" +

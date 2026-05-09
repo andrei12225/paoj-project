@@ -9,7 +9,7 @@ public class Guitar extends Product implements Tunable {
     private int numberOfStrings;
     private GuitarPickupType pickupType;
 
-    public Guitar(String id, String name, double price, int stockQuantity, String brand, String model, int numberOfStrings, GuitarPickupType pickupType) {
+    public Guitar(int id, String name, double price, int stockQuantity, String brand, String model, int numberOfStrings, GuitarPickupType pickupType) {
         super(id, name, price, stockQuantity);
         this.brand = brand;
         this.model = model;
@@ -30,7 +30,7 @@ public class Guitar extends Product implements Tunable {
     @Override
     public String toString() {
         return "Guitar {" +
-            " id='" + getId() + "'" +
+            " id='" + getDisplayId() + "'" +
             ", name='" + getName() + "'" +
             ", price='" + getPrice() + "'" +
             ", stockQuantity='" + getStockQuantity() + "'" +

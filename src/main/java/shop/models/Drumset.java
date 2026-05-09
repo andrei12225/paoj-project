@@ -8,7 +8,7 @@ public class Drumset extends Product {
     private boolean includesCymbals;
 
 
-    public Drumset(String id, String name, double price, int stockQuantity, int numberOfPieces, ShellMaterial shellMaterial, boolean includesCymbals) {
+    public Drumset(int id, String name, double price, int stockQuantity, int numberOfPieces, ShellMaterial shellMaterial, boolean includesCymbals) {
         super(id, name, price, stockQuantity);
         this.numberOfPieces = numberOfPieces;
         this.shellMaterial = shellMaterial;
@@ -18,7 +18,7 @@ public class Drumset extends Product {
     @Override
     public String toString() {
         return "Drumset {" +
-            " id='" + getId() + "'" +
+            " id='" + getDisplayId() + "'" +
             ", name='" + getName() + "'" +
             ", price='" + getPrice() + "'" +
             ", stockQuantity='" + getStockQuantity() + "'" +

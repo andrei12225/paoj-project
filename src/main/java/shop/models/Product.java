@@ -1,12 +1,12 @@
 package shop.models;
 
 public class Product {
-    private String id;
+    private int id;
     private String name;
     private double price;
     private int stockQuantity;
 
-    public Product(String id, String name, double price, int stockQuantity) {
+    public Product(int id, String name, double price, int stockQuantity) {
         this.id = id;
         this.name = name;
         this.price = price;
@@ -20,18 +20,26 @@ public class Product {
         this.stockQuantity -= quantity;
     }
 
+    public String getDisplayId() {
+        return "PRD-" + String.format("%06d", id);
+    }
+
     @Override
     public String toString() {
         return "Product {" +
-            " id='" + id + "'" +
+            " id='" + getDisplayId() + "'" +
             " name='" + getName() + "'" +
             ", price='" + getPrice() + "'" +
             ", stockQuantity='" + getStockQuantity() + "'" +
             " }";
     }
 
-    public String getId() {
+    public int getId() {
         return this.id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getName() {

@@ -36,7 +36,7 @@ public class CSVFileService {
         StringBuilder csvBuilder = new StringBuilder();
         csvBuilder.append("TransactionID,ProductName,BuyerName,Quantity,FinalPricePerUnit,SaleTimestamp\n");
         for (SaleRecord record : currentPeriod.getRecords()) {
-            csvBuilder.append(record.getTransactionID()).append(",")
+            csvBuilder.append(record.getDisplayId()).append(",")
                       .append(record.getSoldProduct().getName()).append(",")
                       .append(record.getBuyer().getCompanyName()).append(",")
                       .append(record.getQuantity()).append(",")

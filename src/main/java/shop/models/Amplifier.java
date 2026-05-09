@@ -9,7 +9,7 @@ public class Amplifier extends Product {
     private double speakerSize;
 
 
-    public Amplifier(String id, String name, double price, int stockQuantity, String brand, int wattage, AmpTechnology technology, double speakerSize) {
+    public Amplifier(int id, String name, double price, int stockQuantity, String brand, int wattage, AmpTechnology technology, double speakerSize) {
         super(id, name, price, stockQuantity);
         this.brand = brand;
         this.wattage = wattage;
@@ -20,7 +20,7 @@ public class Amplifier extends Product {
     @Override
     public String toString() {
         return "Amplifier {" +
-            " id='" + getId() + "'" +
+            " id='" + getDisplayId() + "'" +
             ", name='" + getName() + "'" +
             ", price='" + getPrice() + "'" +
             ", stockQuantity='" + getStockQuantity() + "'" +

@@ -8,7 +8,7 @@ public class Bass extends Product {
     private BassPickupType pickupType;
 
 
-    public Bass(String id, String name, double price, int stockQuantity, int stringCount, boolean isActive, BassPickupType pickupType) {
+    public Bass(int id, String name, double price, int stockQuantity, int stringCount, boolean isActive, BassPickupType pickupType) {
         super(id, name, price, stockQuantity);
         this.stringCount = stringCount;
         this.isActive = isActive;
@@ -19,7 +19,7 @@ public class Bass extends Product {
     @Override
     public String toString() {
         return "Bass {" +
-            " id='" + getId() + "'" +
+            " id='" + getDisplayId() + "'" +
             ", name='" + getName() + "'" +
             ", price='" + getPrice() + "'" +
             ", stockQuantity='" + getStockQuantity() + "'" +

@@ -3,14 +3,14 @@ package shop.models;
 import java.time.LocalDateTime;
 
 public class SaleRecord {
-    private String transactionID;
+    private int transactionID;
     private Product soldProduct;
     private Partner buyer;
     private int quantity;
     private double finalPricePerUnit;
     private LocalDateTime saleTimestamp;
 
-    public SaleRecord(String transactionID, Product soldProduct, Partner buyer, int quantity) {
+    public SaleRecord(int transactionID, Product soldProduct, Partner buyer, int quantity) {
         this.transactionID = transactionID;
         this.soldProduct = soldProduct;
         this.buyer = buyer;
@@ -20,7 +20,7 @@ public class SaleRecord {
         this.saleTimestamp = LocalDateTime.now();
     }
 
-    public SaleRecord(String transactionID, Product soldProduct, Partner buyer, int quantity, double finalPricePerUnit, LocalDateTime saleTimestamp) {
+    public SaleRecord(int transactionID, Product soldProduct, Partner buyer, int quantity, double finalPricePerUnit, LocalDateTime saleTimestamp) {
         this.transactionID = transactionID;
         this.soldProduct = soldProduct;
         this.buyer = buyer;
@@ -33,10 +33,14 @@ public class SaleRecord {
         return this.finalPricePerUnit * this.quantity;
     }
 
+    public String getDisplayId() {
+        return "TXN-" + String.format("%06d", transactionID);
+    }
+
     @Override
     public String toString() {
         return "SaleRecord {" +
-            " transactionID='" + getTransactionID() + "'" +
+            " transactionID='" + getDisplayId() + "'" +
             ", soldProduct='" + getSoldProduct() + "'" +
             ", buyer='" + getBuyer() + "'" +
             ", quantity='" + getQuantity() + "'" +
@@ -45,11 +49,11 @@ public class SaleRecord {
             " }";
     }
 
-    public String getTransactionID() {
+    public int getTransactionID() {
         return this.transactionID;
     }
 
-    public void setTransactionID(String transactionID) {
+    public void setTransactionID(int transactionID) {
         this.transactionID = transactionID;
     }
 

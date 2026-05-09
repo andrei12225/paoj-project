@@ -7,14 +7,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class User {
-    private String userID;
+    private int userID;
     private String username;
     private String password;
     private UserRole role;
     private Map<UserPermission, Boolean> permissions = new HashMap<>();
     private LocalDateTime lastLogin;
 
-    public User(String userID, String username, String password, UserRole role) {
+    public User(int userID, String username, String password, UserRole role) {
         this.userID = userID;
         this.username = username;
         this.password = password;
@@ -35,10 +35,14 @@ public class User {
         return permissions.getOrDefault(permission, false);
     }
 
+    public String getDisplayId() {
+        return "USR-" + String.format("%06d", userID);
+    }
+
     @Override
     public String toString() {
         return "User {" +
-            " userID='" + userID + "'" +
+            " userID='" + getDisplayId() + "'" +
             ", username='" + username + "'" +
             ", password='" + password + "'" +
             ", role='" + role + "'" +
@@ -47,8 +51,12 @@ public class User {
             " }";
     }
 
-    public String getUserID() {
+    public int getUserID() {
         return this.userID;
+    }
+
+    public void setUserID(int userID) {
+        this.userID = userID;
     }
 
     public String getUsername() {

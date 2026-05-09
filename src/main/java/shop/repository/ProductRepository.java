@@ -2,7 +2,9 @@ package shop.repository;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,15 +26,20 @@ import shop.services.ProductFactory;
 
 public class ProductRepository {
     public void create(Product product) {
-        String sql = "INSERT INTO products (id, name, price, stock_quantity) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO products (name, price, stock_quantity) VALUES (?, ?, ?)";
 
-        try (Connection conn = DatabaseConnection.getConnection();) {
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, product.getId());
-            stmt.setString(2, product.getName());
-            stmt.setDouble(3, product.getPrice());
-            stmt.setInt(4, product.getStockQuantity());
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, product.getName());
+            stmt.setDouble(2, product.getPrice());
+            stmt.setInt(3, product.getStockQuantity());
             stmt.executeUpdate();
+
+            try (ResultSet keys = stmt.getGeneratedKeys()) {
+                if (keys.next()) {
+                    product.setId(keys.getInt(1));
+                }
+            }
         } catch (SQLException exception) {
             throw new RuntimeException("Failed to create product", exception);
         }
@@ -57,9 +64,9 @@ public class ProductRepository {
     private void insertGuitar(Guitar guitar) {
         String sql = "INSERT INTO guitars (id, brand, model, number_of_strings, pickup_type) VALUES (?, ?, ?, ?, ?)";
 
-        try (Connection conn = DatabaseConnection.getConnection();) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, guitar.getId());
+            stmt.setInt(1, guitar.getId());
             stmt.setString(2, guitar.getBrand());
             stmt.setString(3, guitar.getModel());
             stmt.setInt(4, guitar.getNumberOfStrings());
@@ -73,9 +80,9 @@ public class ProductRepository {
     private void insertKeyboard(Keyboard keyboard) {
         String sql = "INSERT INTO keyboards (id, key_count, is_digital, key_action) VALUES (?, ?, ?, ?)";
 
-        try (Connection conn = DatabaseConnection.getConnection();) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, keyboard.getId());
+            stmt.setInt(1, keyboard.getId());
             stmt.setInt(2, keyboard.getKeyCount());
             stmt.setBoolean(3, keyboard.getIsDigital());
             stmt.setString(4, keyboard.getKeyAction().name());
@@ -88,9 +95,9 @@ public class ProductRepository {
     private void insertBass(Bass bass) {
         String sql = "INSERT INTO basses (id, string_count, is_active, pickup_type) VALUES (?, ?, ?, ?)";
 
-        try (Connection conn = DatabaseConnection.getConnection();) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, bass.getId());
+            stmt.setInt(1, bass.getId());
             stmt.setInt(2, bass.getStringCount());
             stmt.setBoolean(3, bass.getIsActive());
             stmt.setString(4, bass.getPickupType().name());
@@ -103,9 +110,9 @@ public class ProductRepository {
     private void insertAmplifier(Amplifier amplifier) {
         String sql = "INSERT INTO amplifiers (id, brand, wattage, technology, speaker_size) VALUES (?, ?, ?, ?, ?)";
 
-        try (Connection conn = DatabaseConnection.getConnection();) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, amplifier.getId());
+            stmt.setInt(1, amplifier.getId());
             stmt.setString(2, amplifier.getBrand());
             stmt.setDouble(3, amplifier.getWattage());
             stmt.setString(4, amplifier.getTechnology().name());
@@ -119,9 +126,9 @@ public class ProductRepository {
     private void insertAccessory(Accessory accessory) {
         String sql = "INSERT INTO accessories (id, category, target_instrument, pack_quantity) VALUES (?, ?, ?, ?)";
 
-        try (Connection conn = DatabaseConnection.getConnection();) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, accessory.getId());
+            stmt.setInt(1, accessory.getId());
             stmt.setString(2, accessory.getCategory().name());
             stmt.setString(3, accessory.getTargetInstrument());
             stmt.setInt(4, accessory.getPackQuantity());
@@ -134,9 +141,9 @@ public class ProductRepository {
     private void insertDrumset(Drumset drumset) {
         String sql = "INSERT INTO drumsets (id, number_of_pieces, shell_material, includes_cymbals) VALUES (?, ?, ?, ?)";
 
-        try (Connection conn = DatabaseConnection.getConnection();) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, drumset.getId());
+            stmt.setInt(1, drumset.getId());
             stmt.setInt(2, drumset.getNumberOfPieces());
             stmt.setString(3, drumset.getShellMaterial().name());
             stmt.setBoolean(4, drumset.getIncludesCymbals());
@@ -149,9 +156,9 @@ public class ProductRepository {
     public void delete(Product product) {
         String sql = "DELETE FROM products WHERE id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, product.getId());
+            stmt.setInt(1, product.getId());
             stmt.executeUpdate();
         } catch (SQLException exception) {
             throw new RuntimeException("Failed to delete product", exception);
@@ -175,12 +182,12 @@ public class ProductRepository {
         String sql = "SELECT p.*, g.brand, g.model, g.number_of_strings, g.pickup_type FROM products p JOIN guitars g ON p.id = g.id";
         List<Product> guitars = new ArrayList<>();
 
-        try (Connection conn = DatabaseConnection.getConnection();) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
             var resultSet = stmt.executeQuery();
 
             while (resultSet.next()) {
-                String id = resultSet.getString("id");
+                int id = resultSet.getInt("id");
                 String name = resultSet.getString("name");
                 double price = resultSet.getDouble("price");
                 int stockQuantity = resultSet.getInt("stock_quantity");
@@ -203,12 +210,12 @@ public class ProductRepository {
     public List<Product> findAllBasses() {
         String sql = "SELECT p.*, b.string_count, b.is_active, b.pickup_type FROM products p JOIN basses b ON p.id = b.id";
         List<Product> basses = new ArrayList<>();
-        try (Connection conn = DatabaseConnection.getConnection();) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
             var resultSet = stmt.executeQuery();
 
             while (resultSet.next()) {
-                String id = resultSet.getString("id");
+                int id = resultSet.getInt("id");
                 String name = resultSet.getString("name");
                 double price = resultSet.getDouble("price");
                 int stockQuantity = resultSet.getInt("stock_quantity");
@@ -230,12 +237,12 @@ public class ProductRepository {
     public List<Product> findAllDrumsets() {
         String sql = "SELECT p.*, d.number_of_pieces, d.shell_material, d.includes_cymbals FROM products p JOIN drumsets d ON p.id = d.id";
         List<Product> drumsets = new ArrayList<>();
-        try (Connection conn = DatabaseConnection.getConnection();) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
             var resultSet = stmt.executeQuery();
 
             while (resultSet.next()) {
-                String id = resultSet.getString("id");
+                int id = resultSet.getInt("id");
                 String name = resultSet.getString("name");
                 double price = resultSet.getDouble("price");
                 int stockQuantity = resultSet.getInt("stock_quantity");
@@ -257,12 +264,12 @@ public class ProductRepository {
     public List<Product> findAllKeyboards() {
         String sql = "SELECT p.*, k.key_count, k.is_digital, k.key_action FROM products p JOIN keyboards k ON p.id = k.id";
         List<Product> keyboards = new ArrayList<>();
-        try (Connection conn = DatabaseConnection.getConnection();) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
             var resultSet = stmt.executeQuery();
 
             while (resultSet.next()) {
-                String id = resultSet.getString("id");
+                int id = resultSet.getInt("id");
                 String name = resultSet.getString("name");
                 double price = resultSet.getDouble("price");
                 int stockQuantity = resultSet.getInt("stock_quantity");
@@ -284,12 +291,12 @@ public class ProductRepository {
     public List<Product> findAllAccessories() {
         String sql = "SELECT p.*, a.category, a.target_instrument, a.pack_quantity FROM products p JOIN accessories a ON p.id = a.id";
         List<Product> accessories = new ArrayList<>();
-        try (Connection conn = DatabaseConnection.getConnection();) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
             var resultSet = stmt.executeQuery();
 
             while (resultSet.next()) {
-                String id = resultSet.getString("id");
+                int id = resultSet.getInt("id");
                 String name = resultSet.getString("name");
                 double price = resultSet.getDouble("price");
                 int stockQuantity = resultSet.getInt("stock_quantity");
@@ -311,12 +318,12 @@ public class ProductRepository {
     public List<Product> findAllAmplifiers() {
         String sql = "SELECT p.*, a.brand, a.wattage, a.technology, a.speaker_size FROM products p JOIN amplifiers a ON p.id = a.id";
         List<Product> amplifiers = new ArrayList<>();
-        try (Connection conn = DatabaseConnection.getConnection();) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
             var resultSet = stmt.executeQuery();
 
             while (resultSet.next()) {
-                String id = resultSet.getString("id");
+                int id = resultSet.getInt("id");
                 String name = resultSet.getString("name");
                 double price = resultSet.getDouble("price");
                 int stockQuantity = resultSet.getInt("stock_quantity");
@@ -357,7 +364,7 @@ public class ProductRepository {
     public void updateGuitar(Guitar guitar) {
         String sql = "UPDATE products p JOIN guitars g ON p.id = g.id SET p.name = ?, p.price = ?, p.stock_quantity = ?, g.brand = ?, g.model = ?, g.number_of_strings = ?, g.pickup_type = ? WHERE p.id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, guitar.getName());
             stmt.setDouble(2, guitar.getPrice());
@@ -366,7 +373,7 @@ public class ProductRepository {
             stmt.setString(5, guitar.getModel());
             stmt.setInt(6, guitar.getNumberOfStrings());
             stmt.setString(7, guitar.getPickupType().name());
-            stmt.setString(8, guitar.getId());
+            stmt.setInt(8, guitar.getId());
             stmt.executeUpdate();
         } catch (SQLException exception) {
             throw new RuntimeException("Failed to update guitar", exception);
@@ -376,7 +383,7 @@ public class ProductRepository {
     public void updateBass(Bass bass) {
         String sql = "UPDATE products p JOIN basses b ON p.id = b.id SET p.name = ?, p.price = ?, p.stock_quantity = ?, b.string_count = ?, b.is_active = ?, b.pickup_type = ? WHERE p.id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, bass.getName());
             stmt.setDouble(2, bass.getPrice());
@@ -384,7 +391,7 @@ public class ProductRepository {
             stmt.setInt(4, bass.getStringCount());
             stmt.setBoolean(5, bass.getIsActive());
             stmt.setString(6, bass.getPickupType().name());
-            stmt.setString(7, bass.getId());
+            stmt.setInt(7, bass.getId());
             stmt.executeUpdate();
         } catch (SQLException exception) {
             throw new RuntimeException("Failed to update bass", exception);
@@ -394,7 +401,7 @@ public class ProductRepository {
     public void updateKeyboard(Keyboard keyboard) {
         String sql = "UPDATE products p JOIN keyboards k ON p.id = k.id SET p.name = ?, p.price = ?, p.stock_quantity = ?, k.key_count = ?, k.is_digital = ?, k.key_action = ? WHERE p.id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, keyboard.getName());
             stmt.setDouble(2, keyboard.getPrice());
@@ -402,7 +409,7 @@ public class ProductRepository {
             stmt.setInt(4, keyboard.getKeyCount());
             stmt.setBoolean(5, keyboard.getIsDigital());
             stmt.setString(6, keyboard.getKeyAction().name());
-            stmt.setString(7, keyboard.getId());
+            stmt.setInt(7, keyboard.getId());
             stmt.executeUpdate();
         } catch (SQLException exception) {
             throw new RuntimeException("Failed to update keyboard", exception);
@@ -412,7 +419,7 @@ public class ProductRepository {
     public void updateAmplifier(Amplifier amplifier) {
         String sql = "UPDATE products p JOIN amplifiers a ON p.id = a.id SET p.name = ?, p.price = ?, p.stock_quantity = ?, a.brand = ?, a.wattage = ?, a.technology = ?, a.speaker_size = ? WHERE p.id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, amplifier.getName());
             stmt.setDouble(2, amplifier.getPrice());
@@ -421,7 +428,7 @@ public class ProductRepository {
             stmt.setDouble(5, amplifier.getWattage());
             stmt.setString(6, amplifier.getTechnology().name());
             stmt.setDouble(7, amplifier.getSpeakerSize());
-            stmt.setString(8, amplifier.getId());
+            stmt.setInt(8, amplifier.getId());
             stmt.executeUpdate();
         } catch (SQLException exception) {
             throw new RuntimeException("Failed to update amplifier", exception);
@@ -431,7 +438,7 @@ public class ProductRepository {
     public void updateAccessory(Accessory accessory) {
         String sql = "UPDATE products p JOIN accessories a ON p.id = a.id SET p.name = ?, p.price = ?, p.stock_quantity = ?, a.category = ?, a.target_instrument = ?, a.pack_quantity = ? WHERE p.id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, accessory.getName());
             stmt.setDouble(2, accessory.getPrice());
@@ -439,7 +446,7 @@ public class ProductRepository {
             stmt.setString(4, accessory.getCategory().name());
             stmt.setString(5, accessory.getTargetInstrument());
             stmt.setInt(6, accessory.getPackQuantity());
-            stmt.setString(7, accessory.getId());
+            stmt.setInt(7, accessory.getId());
             stmt.executeUpdate();
         } catch (SQLException exception) {
             throw new RuntimeException("Failed to update accessory", exception);
@@ -449,7 +456,7 @@ public class ProductRepository {
     public void updateDrumset(Drumset drumset) {
         String sql = "UPDATE products p JOIN drumsets d ON p.id = d.id SET p.name = ?, p.price = ?, p.stock_quantity = ?, d.number_of_pieces = ?, d.shell_material = ?, d.includes_cymbals = ? WHERE p.id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, drumset.getName());
             stmt.setDouble(2, drumset.getPrice());
@@ -457,7 +464,7 @@ public class ProductRepository {
             stmt.setInt(4, drumset.getNumberOfPieces());
             stmt.setString(5, drumset.getShellMaterial().name());
             stmt.setBoolean(6, drumset.getIncludesCymbals());
-            stmt.setString(7, drumset.getId());
+            stmt.setInt(7, drumset.getId());
             stmt.executeUpdate();
         } catch (SQLException exception) {
             throw new RuntimeException("Failed to update drumset", exception);

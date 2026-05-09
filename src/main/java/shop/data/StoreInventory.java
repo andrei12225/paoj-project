@@ -14,12 +14,8 @@ import shop.repository.SalePeriodRepository;
 import shop.repository.SaleRecordRepository;
 import shop.repository.UserPermissionsRepository;
 import shop.repository.UserRepository;
-import shop.util.SalePeriodID;
 import shop.util.SearchUtils;
-import shop.util.TransactionID;
-import shop.util.UserID;
 
-import java.sql.SQLException;
 import java.util.List;
 
 public class StoreInventory {   
@@ -50,7 +46,7 @@ private static StoreInventory instance;
         refreshData();
 
         if (registeredUsers.isEmpty()) {
-            User admin = new User(UserID.generateID(), "admin", "1234", UserRole.ADMIN);
+            User admin = new User(0, "admin", "1234", UserRole.ADMIN);
             userRepository.create(admin);
             for (UserPermission permission : UserPermission.values()) {
                 userPermissionsRepository.create(admin, permission);
@@ -64,6 +60,9 @@ private static StoreInventory instance;
         this.products = productRepository.findAll();
         this.partners = partnerRepository.findAll();
         this.registeredUsers = userRepository.findAll();
+        for (User user : registeredUsers) {
+            user.getPermissions().putAll(userPermissionsRepository.findByUser(user));
+        }
 
         List<SalePeriod> allPeriods = salePeriodRepository.findAll();
         this.currentPeriod = allPeriods.stream()
@@ -72,7 +71,7 @@ private static StoreInventory instance;
             .orElse(null);
 
         if (this.currentPeriod != null) {
-            this.currentPeriod.setRecords(saleRecordRepository.findByPeriod(currentPeriod));
+            this.currentPeriod.setRecords(saleRecordRepository.findByPeriod(currentPeriod, this));
         }
     }
 
@@ -98,7 +97,7 @@ private static StoreInventory instance;
         if (getUserByUsername(username, 0) != null) {
             throw new IllegalArgumentException("Username already exists.");
         }
-        User newUser = new User(UserID.generateID(), username, password, UserRole.EMPLOYEE);
+        User newUser = new User(0, username, password, UserRole.EMPLOYEE);
         userRepository.create(newUser);
         registeredUsers.add(newUser);
     }
@@ -172,9 +171,9 @@ private static StoreInventory instance;
         products.remove(p);
     }
 
-    public Product findProductById(String id) {
+    public Product findProductById(int id) {
         return products.stream()
-            .filter(p -> p.getId().equals(id))
+            .filter(p -> p.getId() == id)
             .findFirst()
             .orElse(null);
     }
@@ -217,7 +216,7 @@ private static StoreInventory instance;
 
         p.reduceStock(quantity);
         
-        SaleRecord record = new SaleRecord(TransactionID.generateID(), p, buyer, quantity);
+        SaleRecord record = new SaleRecord(0, p, buyer, quantity);
         currentPeriod.getRecords().add(record);
         buyer.addPurchase(record.getTotalSaleAmount());
         productRepository.update(p);
@@ -254,11 +253,11 @@ private static StoreInventory instance;
         }
     }
 
-    public Product getProductById(String id) {
+    public Product getProductById(int id) {
         return findProductById(id);
     }
 
-    public Partner getPartnerById(String id) {
+    public Partner getPartnerById(int id) {
         return partnerRepository.findById(id);
     }
 
@@ -288,7 +287,7 @@ private static StoreInventory instance;
         if (currentPeriod != null) {
             endCurrentPeriod();
         }
-        SalePeriod salePeriod = new SalePeriod(SalePeriodID.generateID(), name);
+        SalePeriod salePeriod = new SalePeriod(0, name);
         currentPeriod = salePeriod;
         salePeriodRepository.create(salePeriod);
     }
@@ -343,7 +342,7 @@ private static StoreInventory instance;
     public List<SalePeriod> getSalesHistory() { 
         List<SalePeriod> periods = salePeriodRepository.findAll();
         for (SalePeriod period : periods) {
-            period.setRecords(saleRecordRepository.findByPeriod(period));
+            period.setRecords(saleRecordRepository.findByPeriod(period, this));
         }
         return periods;
     }

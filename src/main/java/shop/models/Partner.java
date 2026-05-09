@@ -1,13 +1,13 @@
 package shop.models;
 
 public class Partner {
-    private String partnerID;
+    private int partnerID;
     private String companyName;
     private String email;
     private double discountRate; 
     private double totalSpent;
 
-    public Partner(String partnerID, String companyName, String email, double discountRate, double totalSpent) {
+    public Partner(int partnerID, String companyName, String email, double discountRate, double totalSpent) {
         this.partnerID = partnerID;
         this.companyName = companyName;
         this.email = email;
@@ -15,7 +15,7 @@ public class Partner {
         this.totalSpent = totalSpent;
     }
 
-    public Partner(String partnerID, String companyName, String email, double discountRate) {
+    public Partner(int partnerID, String companyName, String email, double discountRate) {
         this.partnerID = partnerID;
         this.companyName = companyName;
         this.email = email;
@@ -27,10 +27,14 @@ public class Partner {
         this.totalSpent += amount;
     }
 
+    public String getDisplayId() {
+        return "PRT-" + String.format("%06d", partnerID);
+    }
+
     @Override
     public String toString() {
         return "Partner {" +
-            " partnerID='" + getPartnerID() + "'" +
+            " partnerID='" + getDisplayId() + "'" +
             ", companyName='" + getCompanyName() + "'" +
             ", email='" + getEmail() + "'" +
             ", discountRate='" + getDiscountRate() + "'" +
@@ -38,11 +42,11 @@ public class Partner {
             " }";
     }
 
-    public String getPartnerID() {
+    public int getPartnerID() {
         return this.partnerID;
     }
 
-    public void setPartnerID(String partnerID) {
+    public void setPartnerID(int partnerID) {
         this.partnerID = partnerID;
     }
 

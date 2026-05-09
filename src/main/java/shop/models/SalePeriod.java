@@ -5,14 +5,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SalePeriod {
-    private String periodID;
+    private int periodID;
     private String name;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private List<SaleRecord> records; 
     private boolean isOpen;
 
-    public SalePeriod(String id, String name) {
+    public SalePeriod(int id, String name) {
         this.periodID = id;
         this.name = name;
         this.startTime = LocalDateTime.now();
@@ -20,7 +20,7 @@ public class SalePeriod {
         this.isOpen = true;
     }
 
-    public SalePeriod(String id, String name, LocalDateTime startTime, LocalDateTime endTime, boolean isOpen) {
+    public SalePeriod(int id, String name, LocalDateTime startTime, LocalDateTime endTime, boolean isOpen) {
         this.periodID = id;
         this.name = name;
         this.startTime = startTime;
@@ -40,10 +40,14 @@ public class SalePeriod {
                     .sum();
     }
 
+    public String getDisplayId() {
+        return "SP-" + String.format("%06d", periodID);
+    }
+
     @Override
     public String toString() {
         return "SalePeriod {" +
-            " periodID='" + getPeriodID() + "'" +
+            " periodID='" + getDisplayId() + "'" +
             ", name='" + getName() + "'" +
             ", startTime='" + getStartTime() + "'" +
             ", endTime='" + getEndTime() + "'" +
@@ -52,8 +56,12 @@ public class SalePeriod {
             " }";
     }
 
-    public String getPeriodID() {
+    public int getPeriodID() {
         return this.periodID;
+    }
+
+    public void setPeriodID(int periodID) {
+        this.periodID = periodID;
     }
 
     public String getName() {
