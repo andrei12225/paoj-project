@@ -20,6 +20,15 @@ public class SalePeriod {
         this.isOpen = true;
     }
 
+    public SalePeriod(String id, String name, LocalDateTime startTime, LocalDateTime endTime, boolean isOpen) {
+        this.periodID = id;
+        this.name = name;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.records = new ArrayList<>();
+        this.isOpen = isOpen;
+    }
+
     public void closePeriod() {
         this.endTime = LocalDateTime.now();
         this.isOpen = false;
@@ -61,6 +70,10 @@ public class SalePeriod {
 
     public LocalDateTime getEndTime() {
         return this.endTime;
+    }
+
+    public void setRecords(List<SaleRecord> records) {
+        this.records = records;
     }
 
     public List<SaleRecord> getRecords() {

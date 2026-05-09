@@ -8,30 +8,72 @@ import shop.models.Product;
 import shop.models.SalePeriod;
 import shop.models.SaleRecord;
 import shop.models.User;
+import shop.repository.PartnerRepository;
+import shop.repository.ProductRepository;
+import shop.repository.SalePeriodRepository;
+import shop.repository.SaleRecordRepository;
+import shop.repository.UserPermissionsRepository;
+import shop.repository.UserRepository;
 import shop.util.SalePeriodID;
 import shop.util.SearchUtils;
 import shop.util.TransactionID;
 import shop.util.UserID;
-import java.util.ArrayList;
+
+import java.sql.SQLException;
 import java.util.List;
 
 public class StoreInventory {   
-    private static StoreInventory instance;
+private static StoreInventory instance;
+
+    private ProductRepository productRepository;
+    private PartnerRepository partnerRepository;
+    private UserRepository userRepository;
+    private SalePeriodRepository salePeriodRepository;
+    private SaleRecordRepository saleRecordRepository;
+    private UserPermissionsRepository userPermissionsRepository;
 
     private List<Product> products;
     private List<Partner> partners;
-    private List<SalePeriod> salesHistory;
-    private SalePeriod currentPeriod;
     private List<User> registeredUsers;
+    
+    private SalePeriod currentPeriod;
     private User activeUser;
 
     private StoreInventory() {
-        this.products = new ArrayList<>();
-        this.partners = new ArrayList<>();
-        this.salesHistory = new ArrayList<>();
-        this.registeredUsers = new ArrayList<>();
+        this.productRepository = new ProductRepository();
+        this.partnerRepository = new PartnerRepository();
+        this.userRepository = new UserRepository();
+        this.salePeriodRepository = new SalePeriodRepository();
+        this.saleRecordRepository = new SaleRecordRepository();
+        this.userPermissionsRepository = new UserPermissionsRepository();
 
-        registeredUsers.add(new User(UserID.generateID(), "admin", "1234", UserRole.ADMIN));
+        refreshData();
+
+        if (registeredUsers.isEmpty()) {
+            User admin = new User(UserID.generateID(), "admin", "1234", UserRole.ADMIN);
+            userRepository.create(admin);
+            for (UserPermission permission : UserPermission.values()) {
+                userPermissionsRepository.create(admin, permission);
+            }
+        }
+
+        refreshData();
+    }
+
+    public void refreshData() {
+        this.products = productRepository.findAll();
+        this.partners = partnerRepository.findAll();
+        this.registeredUsers = userRepository.findAll();
+
+        List<SalePeriod> allPeriods = salePeriodRepository.findAll();
+        this.currentPeriod = allPeriods.stream()
+            .filter(SalePeriod::getIsOpen)
+            .findFirst()
+            .orElse(null);
+
+        if (this.currentPeriod != null) {
+            this.currentPeriod.setRecords(saleRecordRepository.findByPeriod(currentPeriod));
+        }
     }
 
     public static StoreInventory getInstance() {
@@ -53,27 +95,28 @@ public class StoreInventory {
             System.out.println("Permission denied: You do not have permission to manage users.");
             return;
         }
-        for (User user : registeredUsers) {
-            if (user.getUsername().equals(username)) {
-                throw new IllegalArgumentException("Username already exists. Please choose a different username.");
-            }
+        if (getUserByUsername(username, 0) != null) {
+            throw new IllegalArgumentException("Username already exists.");
         }
         User newUser = new User(UserID.generateID(), username, password, UserRole.EMPLOYEE);
+        userRepository.create(newUser);
         registeredUsers.add(newUser);
     }
 
     public void login(String username, String password) {
-        for (User user : registeredUsers) {
-            if (user.getUsername().equals(username) && user.getPassword().equals(password)) {
-                activeUser = user;
-                System.out.println("Login successful! Welcome, " + activeUser.getUsername());
-                System.out.println("Last login: " + activeUser.getLastLogin());
-                activeUser.updateLastLogin();
-                return;
-            }
+        User user = getUserByUsername(username, 0);
+        if (user == null) {
+            throw new IllegalArgumentException("Invalid username or password.");
+        }
+        if (!user.getPassword().equals(password)) {
+            throw new IllegalArgumentException("Invalid username or password.");
         }
 
-        throw new IllegalArgumentException("Invalid username or password.");
+        activeUser = user;
+        System.out.println("Login successful! Welcome, " + activeUser.getUsername());
+        System.out.println("Last login: " + activeUser.getLastLogin());
+        activeUser.updateLastLogin();
+        userRepository.update(activeUser);
     }
 
     public void deleteUser(String username) {
@@ -81,7 +124,34 @@ public class StoreInventory {
             System.out.println("Permission denied: You do not have permission to manage users.");
             return;
         }
+        userRepository.deleteByUsername(username);
         registeredUsers.removeIf(user -> user.getUsername().equals(username));
+    }
+
+    public void addUserPermission(String username, UserPermission permission) {
+        if (activeUser != null && !activeUser.hasPermission(UserPermission.MANAGE_USERS)) {
+            System.out.println("Permission denied: You do not have permission to manage users.");
+            return;
+        }
+        User user = getUserByUsername(username, 0);
+        if (user == null) {
+            throw new IllegalArgumentException("User not found.");
+        }
+        user.getPermissions().put(permission, true);
+        userPermissionsRepository.create(user, permission);
+    }
+
+    public void removeUserPermission(String username, UserPermission permission) {
+        if (activeUser != null && !activeUser.hasPermission(UserPermission.MANAGE_USERS)) {
+            System.out.println("Permission denied: You do not have permission to manage users.");
+            return;
+        }
+        User user = getUserByUsername(username, 0);
+        if (user == null) {
+            throw new IllegalArgumentException("User not found.");
+        }
+        user.getPermissions().put(permission, false);
+        userPermissionsRepository.delete(user, permission);
     }
 
     public void addProduct(Product p) {
@@ -89,6 +159,7 @@ public class StoreInventory {
             System.out.println("Permission denied: You do not have permission to manage products.");
             return;
         }
+        productRepository.create(p);
         products.add(p);
     }
 
@@ -97,7 +168,15 @@ public class StoreInventory {
             System.out.println("Permission denied: You do not have permission to manage products.");
             return;
         }
+        productRepository.delete(p);
         products.remove(p);
+    }
+
+    public Product findProductById(String id) {
+        return products.stream()
+            .filter(p -> p.getId().equals(id))
+            .findFirst()
+            .orElse(null);
     }
 
     public void addPartner(Partner p) {
@@ -105,6 +184,7 @@ public class StoreInventory {
             System.out.println("Permission denied: You do not have permission to manage partners.");
             return;
         }
+        partnerRepository.create(p);
         partners.add(p);
     }
 
@@ -113,6 +193,7 @@ public class StoreInventory {
             System.out.println("Permission denied: You do not have permission to manage partners.");
             return;
         }
+        partnerRepository.delete(p);
         partners.remove(p);
     }
 
@@ -124,10 +205,10 @@ public class StoreInventory {
         if (currentPeriod == null || !currentPeriod.getIsOpen()) {
             throw new IllegalStateException("No active sale period. Please start a new period before selling.");
         }
-        if (!products.contains(p)) {
+        if (findProductById(p.getId()) == null) {
             throw new IllegalArgumentException("Product not found in inventory.");
         }
-        if (!partners.contains(buyer)) {
+        if (partnerRepository.findById(buyer.getPartnerID()) == null) {
             throw new IllegalArgumentException("Buyer is not a registered partner.");
         }
         if (quantity > p.getStockQuantity()) {
@@ -139,6 +220,10 @@ public class StoreInventory {
         SaleRecord record = new SaleRecord(TransactionID.generateID(), p, buyer, quantity);
         currentPeriod.getRecords().add(record);
         buyer.addPurchase(record.getTotalSaleAmount());
+        productRepository.update(p);
+        partnerRepository.update(buyer);
+        salePeriodRepository.update(currentPeriod);
+        saleRecordRepository.create(record, currentPeriod);
     }
 
     public void updateProduct(Product p, String name, double price, int stockQuantity) {
@@ -146,12 +231,13 @@ public class StoreInventory {
             System.out.println("Permission denied: You do not have permission to manage products.");
             return;
         }
-        if (!products.contains(p)) {
+        if (findProductById(p.getId()) == null) {
             throw new IllegalArgumentException("Product not found in inventory.");
         }
         p.setName(name);
         p.setPrice(price);
         p.reduceStock(p.getStockQuantity() - stockQuantity);
+        productRepository.update(p);
     }
 
     public void applyDiscountToCategory(String category, double discount) {
@@ -159,11 +245,21 @@ public class StoreInventory {
             System.out.println("Permission denied: You do not have permission to manage products.");
             return;
         }
+
         for (Product p : products) {
             if (p.getClass().getSimpleName().equalsIgnoreCase(category)) {
                 p.setPrice(p.getPrice() * (1 - discount));
+                productRepository.update(p);
             }
         }
+    }
+
+    public Product getProductById(String id) {
+        return findProductById(id);
+    }
+
+    public Partner getPartnerById(String id) {
+        return partnerRepository.findById(id);
     }
 
     public List<Product> searchProductByPriceRange(double minPrice, double maxPrice) {
@@ -192,7 +288,9 @@ public class StoreInventory {
         if (currentPeriod != null) {
             endCurrentPeriod();
         }
-        this.currentPeriod = new SalePeriod(SalePeriodID.generateID(), name);
+        SalePeriod salePeriod = new SalePeriod(SalePeriodID.generateID(), name);
+        currentPeriod = salePeriod;
+        salePeriodRepository.create(salePeriod);
     }
 
     public List<Product> getProductsByCategory(String category, int tolerance) {
@@ -214,7 +312,7 @@ public class StoreInventory {
         }
         if (currentPeriod != null) {
             currentPeriod.closePeriod();
-            salesHistory.add(currentPeriod);
+            salePeriodRepository.update(currentPeriod);
             currentPeriod = null;
         }
     }
@@ -224,6 +322,7 @@ public class StoreInventory {
             System.out.println("Permission denied: You do not have permission to manage products.");
             return;
         }
+
         for (Product p : products) {
             if (p instanceof Tunable tunable) {
                 tunable.tune();
@@ -242,11 +341,15 @@ public class StoreInventory {
     }
 
     public List<SalePeriod> getSalesHistory() { 
-        return salesHistory; 
+        List<SalePeriod> periods = salePeriodRepository.findAll();
+        for (SalePeriod period : periods) {
+            period.setRecords(saleRecordRepository.findByPeriod(period));
+        }
+        return periods;
     }
 
     public List<Product> getProducts() { 
-        return products; 
+        return products;
     }
 
     public List<Partner> getPartners() { 

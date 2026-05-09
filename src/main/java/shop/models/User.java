@@ -35,14 +35,6 @@ public class User {
         return permissions.getOrDefault(permission, false);
     }
 
-    public void addPermission(UserPermission permission) {
-        permissions.put(permission, true);
-    }
-
-    public void removePermission(UserPermission permission) {
-        permissions.put(permission, false);
-    }
-
     @Override
     public String toString() {
         return "User {" +

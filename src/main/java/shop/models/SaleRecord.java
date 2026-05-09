@@ -20,6 +20,15 @@ public class SaleRecord {
         this.saleTimestamp = LocalDateTime.now();
     }
 
+    public SaleRecord(String transactionID, Product soldProduct, Partner buyer, int quantity, double finalPricePerUnit, LocalDateTime saleTimestamp) {
+        this.transactionID = transactionID;
+        this.soldProduct = soldProduct;
+        this.buyer = buyer;
+        this.quantity = quantity;
+        this.finalPricePerUnit = finalPricePerUnit;
+        this.saleTimestamp = saleTimestamp;
+    }
+
     public double getTotalSaleAmount() {
         return this.finalPricePerUnit * this.quantity;
     }

@@ -12,4 +12,8 @@ public class PartnerFactory {
     public static Partner createPartner(String name, String contactInfo, double discountRate) {
         return new Partner(generateId(), name, contactInfo, discountRate);
     }
+
+    public static Partner createPartner(String id, String name, String contactInfo, double discountRate) {
+        return new Partner(id, name, contactInfo, discountRate);
+    }
 }

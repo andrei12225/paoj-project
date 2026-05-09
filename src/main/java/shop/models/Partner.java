@@ -7,6 +7,14 @@ public class Partner {
     private double discountRate; 
     private double totalSpent;
 
+    public Partner(String partnerID, String companyName, String email, double discountRate, double totalSpent) {
+        this.partnerID = partnerID;
+        this.companyName = companyName;
+        this.email = email;
+        this.discountRate = discountRate;
+        this.totalSpent = totalSpent;
+    }
+
     public Partner(String partnerID, String companyName, String email, double discountRate) {
         this.partnerID = partnerID;
         this.companyName = companyName;

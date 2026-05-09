@@ -11,6 +11,7 @@ import shop.enums.ShellMaterial;
 import shop.services.ConsoleUi;
 import shop.services.PartnerFactory;
 import shop.services.ProductFactory;
+
 import java.util.Scanner;
 
 public class Main {
@@ -19,7 +20,10 @@ public class Main {
 
         StoreInventory inventory = StoreInventory.getInstance();
 
-        seedInitialData(inventory);
+        boolean isFirstRun = inventory.getProducts().isEmpty() && inventory.getPartners().isEmpty();
+
+        if (isFirstRun) 
+            seedInitialData(inventory);
 
         Scanner scanner = new Scanner(System.in);
         System.out.println("Welcome to the Music Store Inventory System!");

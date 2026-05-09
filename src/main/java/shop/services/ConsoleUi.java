@@ -318,10 +318,10 @@ public class ConsoleUi {
             try {
                 UserPermission perm = UserPermission.valueOf(permInput.toUpperCase());
                 if (userToManage.hasPermission(perm)) {
-                    userToManage.removePermission(perm);
+                    inventory.removeUserPermission(userToManage.getUsername(), perm);
                     System.out.println("Permission " + perm + " removed.");
                 } else {
-                    userToManage.addPermission(perm);
+                    inventory.addUserPermission(userToManage.getUsername(), perm);
                     System.out.println("Permission " + perm + " added.");
                 }
             } catch (IllegalArgumentException e) {
