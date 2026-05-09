@@ -75,6 +75,10 @@ public class User {
         return this.lastLogin;
     }
 
+    public void setLastLogin(LocalDateTime lastLogin) {
+        this.lastLogin = lastLogin;
+    }
+
     public Map<UserPermission, Boolean> getPermissions() {
         return permissions;
     }

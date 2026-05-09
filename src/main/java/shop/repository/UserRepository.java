@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,7 +50,7 @@ public class UserRepository {
                     resultSet.getString("password"),
                     UserRole.valueOf(resultSet.getString("role"))
                 );
-                user.updateLastLogin();
+                user.setLastLogin(resultSet.getObject("last_login", LocalDateTime.class));
                 users.add(user);
             }
         } catch (SQLException exception) {
