@@ -15,6 +15,7 @@ import shop.repository.SalePeriodRepository;
 import shop.repository.SaleRecordRepository;
 import shop.repository.UserPermissionsRepository;
 import shop.repository.UserRepository;
+import shop.services.AuditService;
 import shop.util.SearchUtils;
 
 import java.util.List;
@@ -35,6 +36,8 @@ private static StoreInventory instance;
     
     private SalePeriod currentPeriod;
     private User activeUser;
+
+    public static List<String> productCategories = List.of("Guitar", "Drumset", "Bass", "Amplifier", "Accessory");
 
     private StoreInventory() {
         this.productRepository = new ProductRepository();
@@ -161,15 +164,20 @@ private static StoreInventory instance;
         }
         productRepository.create(p);
         products.add(p);
+        AuditService.getInstance().log("Add product");
     }
 
-    public void removeProduct(Product p) {
+    public void removeProduct(int productId) {
         if (activeUser != null && !activeUser.hasPermission(UserPermission.MANAGE_PRODUCTS)) {
             System.out.println("Permission denied: You do not have permission to manage products.");
             return;
         }
-        productRepository.delete(p);
-        products.remove(p);
+        Product product = findProductById(productId);
+        if (product != null) {
+            productRepository.delete(product);
+            products.remove(product);
+            AuditService.getInstance().log("Remove product");
+        }
     }
 
     public Product findProductById(int id) {
@@ -186,15 +194,27 @@ private static StoreInventory instance;
         }
         partnerRepository.create(p);
         partners.add(p);
+        AuditService.getInstance().log("Register partner");
     }
 
-    public void removePartner(Partner p) {
+    public void removePartner(int partnerId) {
         if (activeUser != null && !activeUser.hasPermission(UserPermission.MANAGE_PARTNERS)) {
             System.out.println("Permission denied: You do not have permission to manage partners.");
             return;
         }
-        partnerRepository.delete(p);
-        partners.remove(p);
+        Partner partner = findPartnerById(partnerId);
+        if (partner != null) {
+            partnerRepository.delete(partner);
+            partners.remove(partner);
+            AuditService.getInstance().log("Remove partner");
+        }
+    }
+
+    private Partner findPartnerById(int id) {
+        return partners.stream()
+            .filter(p -> p.getPartnerID() == id)
+            .findFirst()
+            .orElse(null);
     }
 
     public void sellProduct(Product p, Partner buyer, int quantity) {
@@ -224,6 +244,7 @@ private static StoreInventory instance;
         partnerRepository.update(buyer);
         salePeriodRepository.update(currentPeriod);
         saleRecordRepository.create(record, currentPeriod);
+        AuditService.getInstance().log("Sell product");
     }
 
     public void updateProduct(Product p, String name, double price, int stockQuantity) {
@@ -238,6 +259,7 @@ private static StoreInventory instance;
         p.setPrice(price);
         p.reduceStock(p.getStockQuantity() - stockQuantity);
         productRepository.update(p);
+        AuditService.getInstance().log("Update product");
     }
 
     public void applyDiscountToCategory(String category, double discount) {
@@ -252,6 +274,7 @@ private static StoreInventory instance;
                 productRepository.update(p);
             }
         }
+        AuditService.getInstance().log("Apply bulk discount");
     }
 
     public Product getProductById(int id) {
@@ -269,12 +292,14 @@ private static StoreInventory instance;
     }
 
     public List<Product> getLowStockItems(int threshold) {
+        AuditService.getInstance().log("Generate low-stock report");
         return products.stream()
             .filter(p -> p.getStockQuantity() < threshold)
             .toList();
     }
 
     public double calculateTotalValue() {
+        AuditService.getInstance().log("View inventory valuation");
         return products.stream()
             .mapToDouble(p -> p.getPrice() * p.getStockQuantity())
             .sum();
@@ -291,6 +316,7 @@ private static StoreInventory instance;
         SalePeriod salePeriod = new SalePeriod(0, name);
         currentPeriod = salePeriod;
         salePeriodRepository.create(salePeriod);
+        AuditService.getInstance().log("Start sale period");
     }
 
     public List<Product> getProductsByCategory(String category, int tolerance) {
@@ -315,6 +341,7 @@ private static StoreInventory instance;
             salePeriodRepository.update(currentPeriod);
             currentPeriod = null;
         }
+        AuditService.getInstance().log("End sale period");
     }
 
     public void tuneInstruments() {

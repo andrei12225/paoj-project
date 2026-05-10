@@ -20,8 +20,8 @@ public class ConsoleUi {
         this.inventory = inventory;
         this.scanner = scanner;
         this.options = new TreeMap<>(Map.ofEntries(
-            Map.entry(1, "View Products"),
-            Map.entry(2, "View Partners"),
+            Map.entry(1, "Manage Products"),
+            Map.entry(2, "Manage Partners"),
             Map.entry(3, "Start New Sale Period"),
             Map.entry(4, "Close Current Sale Period"),
             Map.entry(5, "View Current Sale Period"), 
@@ -47,12 +47,12 @@ public class ConsoleUi {
                 String optionStr = options.get(option);
 
                 switch (optionStr) {
-                    case "View Products":
-                        handleViewProducts();
+                    case "Manage Products":
+                        handleManageProducts();
                         break;
 
-                    case "View Partners":
-                        handleViewPartners();
+                    case "Manage Partners":
+                        handleManagePartners();
                         break;
 
                     case "Start New Sale Period":
@@ -81,6 +81,7 @@ public class ConsoleUi {
 
                     case "Generate Sales Report":
                         System.out.println("Generating sales report...");
+                        AuditService.getInstance().log("Export CSV");
                         CSVFileService.exportProductsToCSV();
                         break;
 
@@ -108,17 +109,104 @@ public class ConsoleUi {
         }
     }
 
-    private void handleViewProducts() {
-        System.out.println("Products:");
-        for (var product : inventory.getProducts()) {
-            System.out.println(product);
+    private void handleManageProducts() {
+        System.out.println("Managing products...");
+        System.out.println("Choose an option:");
+        System.out.println("1. View products");
+        System.out.println("2. Add product");
+        System.out.println("3. Remove product");
+
+        int productOption = Integer.parseInt(scanner.nextLine());
+        switch (productOption) {
+            case 1:
+                System.out.println("Products:");
+                for (var p : inventory.getProducts()) {
+                    System.out.println(p);  
+                }
+                break;
+            case 2:
+                ProductInputHandler inputHandler = new ProductInputHandler(inventory, scanner);
+                
+                System.out.println("Enter product name: ");
+                String productName = scanner.nextLine();
+                System.out.println("Enter product price: ");
+                double productPrice = Double.parseDouble(scanner.nextLine());
+                System.out.println("Enter product stock quantity: ");
+                int productStock = Integer.parseInt(scanner.nextLine());
+                System.out.println("Enter product category, ");
+                System.out.println("Available categories:");
+                for (String category : StoreInventory.productCategories) {
+                    System.out.println("- " + category);
+                }
+                String productCategory = scanner.nextLine();
+                switch (productCategory.toLowerCase()) {
+                    case "guitar":
+                        inputHandler.handleAddGuitar(productName, productPrice, productStock);
+                        break;
+                    case "amplifier":
+                        inputHandler.handleAddAmplifier(productName, productPrice, productStock);
+                        break;
+                    case "keyboard":
+                        inputHandler.handleAddKeyboard(productName, productPrice, productStock);
+                        break;
+                    case "bass":
+                        inputHandler.handleAddBass(productName, productPrice, productStock);
+                    case "drumset":
+                        inputHandler.handleAddDrumSet(productName, productPrice, productStock);
+                        break;
+                    case "accessory":
+                        inputHandler.handleAddAccessory(productName, productPrice, productStock);
+                        break;
+                    default:
+                        System.out.println("Invalid product category.");
+                        break;
+                }
+                System.out.println("Product added.");
+                break;
+            case 3:
+                System.out.println("Enter product ID to remove: ");
+                int productIdToRemove = Integer.parseInt(scanner.nextLine());
+                inventory.removeProduct(productIdToRemove);
+                System.out.println("Product removed.");
+                break;
         }
     }
 
-    private void handleViewPartners() {
-        System.out.println("Partners:");
-        for (var p : inventory.getPartners()) {
-            System.out.println(p);
+    private void handleManagePartners() {
+        System.out.println("Managing partners...");
+        System.out.println("Choose an option:");
+        System.out.println("1. View partners");
+        System.out.println("2. Add partner");
+        System.out.println("3. Remove partner");
+
+        int partnerOption = Integer.parseInt(scanner.nextLine());
+        switch (partnerOption) {
+            case 1:
+                System.out.println("Partners:");
+                for (var p : inventory.getPartners()) {
+                    System.out.println(p);
+                }
+                break;
+            case 2:
+                System.out.println("Enter partner company name: ");
+                String partnerName = scanner.nextLine();
+                System.out.println("Enter partner email: ");
+                String partnerContact = scanner.nextLine();
+                System.out.println("Enter partner discount rate (0-100): ");
+                double partnerDiscount = Double.parseDouble(scanner.nextLine());
+                
+                Partner newPartner = PartnerFactory.createPartner(0, partnerName, partnerContact, partnerDiscount);
+                inventory.addPartner(newPartner);
+                System.out.println("Partner added.");
+                break;
+            case 3:
+                System.out.println("Enter partner ID to remove: ");
+                int partnerIdToRemove = Integer.parseInt(scanner.nextLine());
+                inventory.removePartner(partnerIdToRemove);
+                System.out.println("Partner removed.");
+                break;
+            default:
+                System.out.println("Invalid option.");
         }
     }
 
@@ -135,6 +223,7 @@ public class ConsoleUi {
     }
 
     private void handleViewCurrentSalePeriod() {
+        AuditService.getInstance().log("View sale period info");
         System.out.println("Current Sale Period:");
         if (inventory.getCurrentPeriod() != null) {
             System.out.println(inventory.getCurrentPeriod());
@@ -216,6 +305,7 @@ public class ConsoleUi {
     }
 
     private void handleFilterProducts() {
+        AuditService.getInstance().log("Filter products");
         System.out.println("Choose a filter option:");
         System.out.println("1. Filter by category");
         System.out.println("2. Filter by price range");
